@@ -1,14 +1,12 @@
 import argparse
 import json
 from tqdm import tqdm
-from utils.gpt_inference import GPTInference
-from utils.gemini_inference import GeminiInference
-from utils.claude_inference import ClaudeInference
+from utils.base_inference import BaseInference
+from utils.inference_factory import create_inference
 from utils.eval_util import single_ans_em, has_correct_answer
 from datasets import load_dataset
 import time
 import tiktoken
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -18,14 +16,9 @@ if __name__ == "__main__":
     parser.add_argument("--reader_model", type=str, default=None, help="Reader model")
 
     args = parser.parse_args()
-
     test_data = load_dataset("TIGER-Lab/LongRAG", args.test_data_name, split=args.test_data_split)
-    if args.reader_model == "GPT-4o":
-        llm_inference = GPTInference()
-    elif args.reader_model == "Gemini":
-        llm_inference = GeminiInference()
-    elif args.reader_model == "Claude":
-        llm_inference = ClaudeInference()
+
+    llm_inference: BaseInference = create_inference(args.reader_model)
 
     output_file = open(args.output_file_path, 'w')
     enc = tiktoken.get_encoding("cl100k_base")
